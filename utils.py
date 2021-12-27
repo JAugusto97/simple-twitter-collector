@@ -60,7 +60,7 @@ def collect_tweets_from_query(client, query, max_results):
                 new_row = {
                     "tweet_text": tweet.text,
                     "tweet_id": tweet.id,
-                    "tweet_created_at": tweet.created_at.strftime("%d-%b-%Y (%H:%M:%S.%f)"),
+                    "tweet_created_at": tweet.created_at.strftime("%d-%b-%Y_%H:%M:%S"),
                     "tweet_geo": tweet.geo["place_id"] if tweet.geo else None,
                     "tweet_public_metrics": tweet.public_metrics,
                     "tweet_in_reply_to_user_id": tweet.in_reply_to_user_id,
@@ -69,7 +69,7 @@ def collect_tweets_from_query(client, query, max_results):
                     "author_id": tweet.author_id,
                     "author_name": user.name,
                     "author_username": user.username,
-                    "author_created_at": user.created_at.strftime("%d-%b-%Y (%H:%M:%S.%f)"),
+                    "author_created_at": user.created_at.strftime("%d-%b-%Y_%H:%M:%S"),
                     "author_description": user.description,
                     "author_entities": user.entities,
                     "author_location": user.location,

@@ -1,5 +1,4 @@
 import tweepy
-from datetime import datetime
 from utils import (
     collect_tweets_from_query,
     collect_tweets_from_user_id,

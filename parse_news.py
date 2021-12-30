@@ -82,7 +82,6 @@ def parse_datafile(drive, news_id):
             "following_count",
             "tweet_count",
             "listed_count",
-            "entities",
             "updated_at"
         ]
     )

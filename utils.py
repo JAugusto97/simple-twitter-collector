@@ -1,5 +1,4 @@
 import os
-import argparse
 import json
 from datetime import datetime
 from uuid import uuid4
@@ -49,7 +48,8 @@ def collect_tweets_from_query(client, query, max_results):
         max_results=100,
     )):
         print(f"Batch {i}")
-        if len(collected_tweets) >= max_results:
+        if (max_results and len(collected_tweets) >= max_results) or not (tweets.includes.get('users')):
+            print(f"collected {len(collected_tweets)} tweets.")
             break
 
         users = {u["id"]: u for u in tweets.includes['users']}
@@ -119,7 +119,7 @@ def collect_tweets_from_user_id(client, user_id, max_results):
         max_results=100,
     )):
         print(f"Batch {i}")
-        if len(collected_tweets) >= max_results:
+        if max_results and len(collected_tweets) >= max_results:
             break
 
         users = {u["id"]: u for u in tweets.includes['users']}
@@ -161,9 +161,16 @@ def collect_tweets_from_user_id(client, user_id, max_results):
 
 
 def upload_file(drive, data, filename, news_name):
+    if filename.endswith(".json"):
+        parent_id = "1xvHEH-O-VWF7gSeJ5HSo5HIOyiI1udqx"
+        local_path = "raw_data"
+    else:
+        parent_id = "1kLsnVNK7FQp61eJH6EhAt0cNa91Njapi"
+        local_path = "data"
+
     # list of folders at raw_data
     file_list = drive.ListFile(
-        {'q': "'1xvHEH-O-VWF7gSeJ5HSo5HIOyiI1udqx' in parents and trashed=false"}
+        {'q': f"'{parent_id}' in parents and trashed=false"}
     ).GetList()
     filename_list = {f["title"]: f["id"] for f in file_list}
 
@@ -172,7 +179,7 @@ def upload_file(drive, data, filename, news_name):
         folder_metadata = {
             'title': news_name,
             'parents': [
-                {"id": "1xvHEH-O-VWF7gSeJ5HSo5HIOyiI1udqx", "kind": "drive#childList"}
+                {"id": f"{parent_id}", "kind": "drive#childList"}
             ], # eleicoes2022/raw_data
             'mimeType': 'application/vnd.google-apps.folder'
         }
@@ -187,16 +194,20 @@ def upload_file(drive, data, filename, news_name):
     file_metadata = {
         'title': filename,
         'parents': [{"id": folder_id, "kind": "drive#childList"}], # eleicoes2022/raw_data/news_name
-        'mimeType': 'application/json'
+        'mimeType': 'application/json' if filename.endswith(".json") else 'application/vnd.ms-excel'
     }
 
     # dump file locally
-    if not os.path.exists("raw_data"):
-        os.mkdir("raw_data")
+    if not os.path.exists(local_path):
+        os.mkdir(local_path)
 
-    filepath = os.path.join("raw_data", filename)
-    with open(filepath, "w") as fp:
-        json.dump(data, fp)
+    filepath = os.path.join(local_path, filename)
+    if filename.endswith(".json"):
+        with open(filepath, "w") as fp:
+            json.dump(data, fp)
+    
+    else:
+        data.to_csv(filepath, index=False)
 
     # upload to google drive
     gfile = drive.CreateFile(file_metadata)
@@ -219,49 +230,6 @@ def auth_gdrive(cache_file="credentials/cached_google_credentials.txt"):
     gauth.SaveCredentialsFile(cache_file)
 
     return gauth
-
-def parse_args():
-    parser = argparse.ArgumentParser(description='Collect tweets.')
-    parser.add_argument(
-        '--query',
-        default=None,
-        type=str,
-        help="string to query twitter."
-        "reference: https://developer.twitter.com/en/docs/twitter-api/v1/rules-and-filtering/search-operators"
-    )
-    parser.add_argument(
-        '--username',
-        default=None, 
-        type=str,
-        help="twitter username (@) to collect tweets from"
-    )
-    parser.add_argument(
-        '--max_results', 
-        type=int,
-        default=None,
-        help='defines maximum amount of tweets to collect. None collects everything.'
-    )
-    parser.add_argument(
-        '--credentials_file', 
-        type=str,
-        default="credentials/twitter_credentials.json",
-        help='json file path containing twitter api credentials'
-    )
-    parser.add_argument(
-        '--user_ids_file', 
-        type=str,
-        default="user_ids.json",
-        help='json file path containing usernames to user_id mappings'
-    )
-
-    args = parser.parse_args()
-    query = args.query
-    username = args.username
-
-    if not query and not username:
-        raise Exception("Missing Query or Username")
-
-    return args
 
 def get_tweet_id(filename, username):
     with open(filename) as fp:

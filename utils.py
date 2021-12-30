@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 from uuid import uuid4
 import tweepy
-
+from pydrive.auth import GoogleAuth
 
 FILE_UUID = str(uuid4())
 TIMESTAMP = datetime.now().strftime("%d-%b-%Y_%H:%M:%S")
@@ -160,13 +160,65 @@ def collect_tweets_from_user_id(client, user_id, max_results):
     return data 
 
 
-def dump_file(tweets, filename):
+def upload_file(drive, data, filename, news_name):
+    # list of folders at raw_data
+    file_list = drive.ListFile(
+        {'q': "'1xvHEH-O-VWF7gSeJ5HSo5HIOyiI1udqx' in parents and trashed=false"}
+    ).GetList()
+    filename_list = {f["title"]: f["id"] for f in file_list}
+
+    # create folder if not exists
+    if news_name not in filename_list.keys():
+        folder_metadata = {
+            'title': news_name,
+            'parents': [
+                {"id": "1xvHEH-O-VWF7gSeJ5HSo5HIOyiI1udqx", "kind": "drive#childList"}
+            ], # eleicoes2022/raw_data
+            'mimeType': 'application/vnd.google-apps.folder'
+        }
+
+        folder = drive.CreateFile(folder_metadata)
+        folder.Upload()
+        folder_id = folder.get("id")
+    else:
+        folder_id = filename_list[news_name]
+
+    # upload file to folder
+    file_metadata = {
+        'title': filename,
+        'parents': [{"id": folder_id, "kind": "drive#childList"}], # eleicoes2022/raw_data/news_name
+        'mimeType': 'application/json'
+    }
+
+    # dump file locally
     if not os.path.exists("raw_data"):
         os.mkdir("raw_data")
 
     filepath = os.path.join("raw_data", filename)
     with open(filepath, "w") as fp:
-        json.dump(tweets, fp)
+        json.dump(data, fp)
+
+    # upload to google drive
+    gfile = drive.CreateFile(file_metadata)
+    gfile.SetContentFile(filepath)
+    gfile.Upload()
+
+def auth_gdrive(cache_file="credentials/cached_google_credentials.txt"):
+    gauth = GoogleAuth()             
+
+    # Try to load cached client credentials, else launch webserver to auth
+    gauth.LoadCredentialsFile(cache_file)
+    gauth.DEFAULT_SETTINGS['client_config_file'] = "credentials/client_secrets.json"
+    if gauth.credentials is None:
+        gauth.LocalWebserverAuth()
+    elif gauth.access_token_expired:
+        gauth.Refresh()
+    else:
+        gauth.Authorize()
+    # Save the current credentials to a file
+    gauth.SaveCredentialsFile(cache_file)
+
+    return gauth
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Collect tweets.')
@@ -192,7 +244,7 @@ def parse_args():
     parser.add_argument(
         '--credentials_file', 
         type=str,
-        default="credentials.json",
+        default="credentials/twitter_credentials.json",
         help='json file path containing twitter api credentials'
     )
     parser.add_argument(

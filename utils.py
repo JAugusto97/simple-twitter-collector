@@ -6,7 +6,6 @@ import tweepy
 from pydrive.auth import GoogleAuth
 
 FILE_UUID = str(uuid4())
-TIMESTAMP = datetime.now().strftime("%d-%b-%Y_%H:%M:%S")
 
 def load_credentials(filename):
     with open(filename) as fp:
@@ -18,7 +17,7 @@ def load_credentials(filename):
 
     return consumer_key, consumer_secret, bearer_token
 
-def collect_tweets_from_query(client, query, max_results):
+def collect_tweets_from_query(gdrive, client, query, max_results, news_id, save_batch_size):
     collected_tweets = []
     for i, tweets in enumerate(tweepy.Paginator(
         client.search_recent_tweets,
@@ -60,7 +59,7 @@ def collect_tweets_from_query(client, query, max_results):
                 new_row = {
                     "tweet_text": tweet.text,
                     "tweet_id": tweet.id,
-                    "tweet_created_at": tweet.created_at.strftime("%d-%b-%Y_%H:%M:%S"),
+                    "tweet_created_at": tweet.created_at.strftime("%Y-%m-%d %H:%M:%S"),
                     "tweet_geo": tweet.geo["place_id"] if tweet.geo else None,
                     "tweet_public_metrics": tweet.public_metrics,
                     "tweet_in_reply_to_user_id": tweet.in_reply_to_user_id,
@@ -69,7 +68,7 @@ def collect_tweets_from_query(client, query, max_results):
                     "author_id": tweet.author_id,
                     "author_name": user.name,
                     "author_username": user.username,
-                    "author_created_at": user.created_at.strftime("%d-%b-%Y_%H:%M:%S"),
+                    "author_created_at": user.created_at.strftime("%Y-%m-%d %H:%M:%S"),
                     "author_description": user.description,
                     "author_entities": user.entities,
                     "author_location": user.location,
@@ -80,15 +79,26 @@ def collect_tweets_from_query(client, query, max_results):
                 }
                 collected_tweets.append(new_row)
     
+                if len(collected_tweets) >= save_batch_size:
+                    data = {
+                        "query": query,
+                        "query_id": FILE_UUID,
+                        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "data": collected_tweets,
+                    }
+
+                    upload_file(gdrive, data, f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}.json", news_id)
+                    collected_tweets = []
+
     data = {
         "query": query,
         "query_id": FILE_UUID,
-        "timestamp": TIMESTAMP,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "data": collected_tweets,
     }
 
-    return data 
-
+    upload_file(gdrive, data, f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}.json", news_id)
+    
 def collect_tweets_from_user_id(client, user_id, max_results):
     collected_tweets = []
     for i, tweets in enumerate(tweepy.Paginator(
@@ -153,7 +163,7 @@ def collect_tweets_from_user_id(client, user_id, max_results):
     data = {
         "query": user_id,
         "query_id": FILE_UUID,
-        "timestamp": TIMESTAMP,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "data": collected_tweets,
     }
 
@@ -161,12 +171,8 @@ def collect_tweets_from_user_id(client, user_id, max_results):
 
 
 def upload_file(drive, data, filename, news_name):
-    if filename.endswith(".json"):
-        parent_id = "1xvHEH-O-VWF7gSeJ5HSo5HIOyiI1udqx"
-        local_path = "raw_data"
-    else:
-        parent_id = "1kLsnVNK7FQp61eJH6EhAt0cNa91Njapi"
-        local_path = "data"
+    parent_id = "1xvHEH-O-VWF7gSeJ5HSo5HIOyiI1udqx" # raw_data
+    local_path = os.path.join("raw_data", news_name)
 
     # list of folders at raw_data
     file_list = drive.ListFile(
@@ -180,7 +186,7 @@ def upload_file(drive, data, filename, news_name):
             'title': news_name,
             'parents': [
                 {"id": f"{parent_id}", "kind": "drive#childList"}
-            ], # eleicoes2022/raw_data
+            ],
             'mimeType': 'application/vnd.google-apps.folder'
         }
 
@@ -202,12 +208,8 @@ def upload_file(drive, data, filename, news_name):
         os.mkdir(local_path)
 
     filepath = os.path.join(local_path, filename)
-    if filename.endswith(".json"):
-        with open(filepath, "w") as fp:
-            json.dump(data, fp)
-    
-    else:
-        data.to_csv(filepath, index=False)
+    with open(filepath, "w") as fp:
+        json.dump(data, fp)
 
     # upload to google drive
     gfile = drive.CreateFile(file_metadata)

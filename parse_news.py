@@ -1,14 +1,14 @@
 from utils import (
     auth_gdrive,
     upload_file,
-    TIMESTAMP
 )
 from pydrive.drive import GoogleDrive
 import os
 import json
 import argparse
-import pandas as pd
 from tqdm import tqdm
+import mysql.connector
+from datetime import datetime
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Collect tweets.')
@@ -47,44 +47,10 @@ def download_news_data(drive, news_id):
 
     return fname_list
 
-def parse_datafile(drive, news_id):
+def parse_datafile(drive, cursor, news_id):
+    tweets = []
+    users = []
     files = download_news_data(drive, news_id)
-    tweets_df = pd.DataFrame(
-        columns=[
-            "tweet_id",
-            "user_id",
-            "news_id",
-            "text",
-            "created_at",
-            "geo",
-            "retweet_count",
-            "reply_count",
-            "like_count",
-            "quote_count",
-            "language",
-            "conversation_id",
-            "in_reply_to_user_id",
-            "media_url",
-            "updated_at"
-        ]
-    )
-    users_df = pd.DataFrame(
-        columns=[
-            "user_id",
-            "username",
-            "description",
-            "created_at",
-            "location",
-            "is_verified",
-            "is_protected",
-            "profile_image_url",
-            "followers_count",
-            "following_count",
-            "tweet_count",
-            "listed_count",
-            "updated_at"
-        ]
-    )
     for file in files:
         with open(file) as fp:
             file_content = json.load(fp)
@@ -105,7 +71,7 @@ def parse_datafile(drive, news_id):
                     "conversation_id": tweet["tweet_conversation_id"],
                     "in_reply_to_user_id": tweet["tweet_in_reply_to_user_id"],
                     "media_url": None,
-                    "updated_at": TIMESTAMP
+                    "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 }
 
                 user_row = {
@@ -121,25 +87,39 @@ def parse_datafile(drive, news_id):
                     "following_count": tweet["author_public_metrics"]["following_count"],
                     "tweet_count": tweet["author_public_metrics"]["tweet_count"],
                     "listed_count": tweet["author_public_metrics"]["listed_count"],
-                    "updated_at": TIMESTAMP
+                    "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 }
 
-                tweets_df = tweets_df.append(tweet_row, ignore_index=True)
-                users_df = users_df.append(user_row, ignore_index=True)
+                tweets.append(tweet_row)
+                users.append(user_row)
 
-    tweets_df = tweets_df.drop_duplicates(["tweet_id"]).reset_index(drop=True)
-    users_df = users_df.drop_duplicates(["user_id"]).reset_index(drop=True)
+    for table_name, data in [("tweets", tweets), ("users", users)]:
+        cols = ", ".join(data[0].keys())
+        values = "".join([f"%({key})s," for key in data[0].keys()])[:-1]
+        sql = \
+            f"""INSERT INTO {table_name} ({cols})
+            VALUES ({values}) ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP
+            """
 
-    return tweets_df, users_df
+        cursor.executemany(sql, data)
 
 if __name__ == "__main__":
     args = parse_args()
     gauth = auth_gdrive()
     gdrive = GoogleDrive(gauth)
 
-    tweets_df, users_df = parse_datafile(gdrive, args.news_id)
-    upload_file(gdrive, tweets_df, "tweets.csv", args.news_id)
-    upload_file(gdrive, tweets_df, "users.csv", args.news_id)
+    db = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="",
+        database="eleicoes2022"
+    )
+
+    cursor = db.cursor()
+    parse_datafile(gdrive, cursor, args.news_id)
+    db.commit()
+
+    print(cursor.rowcount, "records inserted.")
 
 
     

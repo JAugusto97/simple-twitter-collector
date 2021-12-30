@@ -2,6 +2,7 @@ import json
 import os
 import tweepy
 import argparse
+from datetime import datetime
 from pydrive.drive import GoogleDrive
 from utils import (
     auth_gdrive,
@@ -10,7 +11,6 @@ from utils import (
     get_tweet_id,
     load_credentials,
     upload_file,
-    TIMESTAMP
 )
 
 def parse_args():
@@ -51,6 +51,12 @@ def parse_args():
         default="user_ids.json",
         help='json file path containing usernames to user_id mappings'
     )
+    parser.add_argument(
+        '--save_batch_size', 
+        type=int,
+        default=50000,
+        help='save when batch_size tweets are collected'
+    )
 
     args = parser.parse_args()
     query = args.query
@@ -70,10 +76,8 @@ if __name__ == "__main__":
     client = tweepy.Client(bearer_token=bearer_token)
 
     if args.query:
-        data = collect_tweets_from_query(client, args.query, args.max_results)
+        data = collect_tweets_from_query(gdrive, client, args.query, args.max_results, args.news_id, args.save_batch_size)
     
     elif args.username:
         tweet_id = get_tweet_id(args.user_ids_file, args.username)
         data = collect_tweets_from_user_id(client, tweet_id, args.max_results)
-
-    upload_file(gdrive, data, f"{TIMESTAMP}.json", args.news_id)

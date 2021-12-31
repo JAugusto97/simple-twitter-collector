@@ -17,7 +17,7 @@ cursor.execute(
     news_id VARCHAR(80) NOT NULL,
     text VARCHAR(1000),
     created_at TIMESTAMP,
-    geo VARCHAR(80),
+    place_id VARCHAR(80),
     retweet_count INT UNSIGNED,
     reply_count INT UNSIGNED,
     like_count INT UNSIGNED,
@@ -25,7 +25,7 @@ cursor.execute(
     language VARCHAR(80),
     conversation_id VARCHAR(80),
     in_reply_to_user_id VARCHAR(80),
-    media_url VARCHAR(360),
+    media_key VARCHAR(360),
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY(tweet_id, news_id)
   )"""
@@ -64,14 +64,32 @@ cursor.execute(
   """
   CREATE TABLE IF NOT EXISTS fake_news
   (
-    news_id VARCHAR(360),
-    source VARCHAR(360),
+    news_id VARCHAR(360) NOT NULL,
+    source VARCHAR(360) NOT NULL,
     headline VARCHAR(1000),
     url VARCHAR(580),
     created_at TIMESTAMP,
     search_query VARCHAR(1000),
     prejudices_candidacy VARCHAR(360),
     PRIMARY KEY(news_id, source)
+  )
+  """
+)
+
+cursor.execute(
+  """
+  CREATE TABLE IF NOT EXISTS media
+  (
+    media_key VARCHAR(360) NOT NULL,
+    tweet_id VARCHAR(80) NOT NULL,
+    type VARCHAR(160),
+    duration_ms INT UNSIGNED,
+    height INT UNSIGNED,
+    width INT UNSIGNED,
+    preview_image_url VARCHAR(360),
+    alt_text VARCHAR(1000),
+    view_count INT UNSIGNED,
+    PRIMARY KEY(media_key, tweet_id)
   )
   """
 )

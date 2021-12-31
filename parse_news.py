@@ -93,15 +93,16 @@ def parse_datafile(drive, cursor, news_id):
                 tweets.append(tweet_row)
                 users.append(user_row)
 
-    for table_name, data in [("tweets", tweets), ("users", users)]:
-        cols = ", ".join(data[0].keys())
-        values = "".join([f"%({key})s," for key in data[0].keys()])[:-1]
-        sql = \
-            f"""INSERT INTO {table_name} ({cols})
-            VALUES ({values}) ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP
-            """
+    if len(tweets) > 0:
+        for table_name, data in [("tweets", tweets), ("users", users)]:
+            cols = ", ".join(data[0].keys())
+            values = "".join([f"%({key})s," for key in data[0].keys()])[:-1]
+            sql = \
+                f"""INSERT INTO {table_name} ({cols})
+                VALUES ({values}) ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP
+                """
 
-        cursor.executemany(sql, data)
+            cursor.executemany(sql, data)
 
 if __name__ == "__main__":
     args = parse_args()

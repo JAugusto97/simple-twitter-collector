@@ -27,6 +27,7 @@ def collect_tweets_from_query(gdrive, client, query, max_results, news_id, save_
             'created_at',
             'geo',
             'lang',
+            'conversation_id',
             'public_metrics',
             'referenced_tweets',
             'in_reply_to_user_id',

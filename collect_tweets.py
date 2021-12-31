@@ -54,7 +54,7 @@ def parse_args():
     parser.add_argument(
         '--save_batch_size', 
         type=int,
-        default=50000,
+        default=5000,
         help='save when batch_size tweets are collected'
     )
 

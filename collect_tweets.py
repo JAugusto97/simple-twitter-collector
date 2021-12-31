@@ -7,7 +7,6 @@ from pydrive.drive import GoogleDrive
 from utils import (
     auth_gdrive,
     collect_tweets_from_query,
-    collect_tweets_from_user_id,
     get_tweet_id,
     load_credentials,
     upload_file,

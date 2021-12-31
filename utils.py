@@ -44,7 +44,7 @@ def collect_tweets_from_query(gdrive, client, query, max_results, news_id, save_
             'public_metrics',
             'verified',
         ],
-        expansions='author_id',
+        expansions=["author_id", "referenced_tweets.id", "referenced_tweets.id.author_id"],
         max_results=100,
     )):
         print(f"Batch {i}")
@@ -53,12 +53,17 @@ def collect_tweets_from_query(gdrive, client, query, max_results, news_id, save_
             break
 
         users = {u["id"]: u for u in tweets.includes['users']}
+        referenced_tweets = {
+            referenced_tweet.id: referenced_tweet for referenced_tweet in tweets.includes.get("tweets")
+        }
         for i, tweet in enumerate(tweets.data):
             new_row = {}
             if users[tweet.author_id]:
                 user = users[tweet.author_id]
+                # get referenced tweet if its a retweet (otherwise text is truncated)
+                tweet_text = referenced_tweets[tweet.referenced_tweets[0].id].text if tweet.get("referenced_tweets") else tweet.text
                 new_row = {
-                    "tweet_text": tweet.text,
+                    "tweet_text": tweet_text,
                     "tweet_id": tweet.id,
                     "tweet_created_at": tweet.created_at.strftime("%Y-%m-%d %H:%M:%S"),
                     "tweet_geo": tweet.geo["place_id"] if tweet.geo else None,
@@ -100,75 +105,79 @@ def collect_tweets_from_query(gdrive, client, query, max_results, news_id, save_
 
     upload_file(gdrive, data, f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}.json", news_id)
     
-def collect_tweets_from_user_id(client, user_id, max_results):
-    collected_tweets = []
-    for i, tweets in enumerate(tweepy.Paginator(
-        client.get_users_tweets,
-        id=user_id,
-        tweet_fields = [
-            'context_annotations',
-            'created_at',
-            'geo',
-            'lang',
-            'public_metrics',
-            'referenced_tweets',
-            'in_reply_to_user_id',
-        ],
-        user_fields = [
-            'profile_image_url',
-            'name',
-            'username',
-            'created_at',
-            'description',
-            'entities',
-            'location',
-            'protected',
-            'public_metrics',
-            'verified',
-        ],
-        expansions='author_id',
-        max_results=100,
-    )):
-        print(f"Batch {i}")
-        if max_results and len(collected_tweets) >= max_results:
-            break
+# def collect_tweets_from_user_id(client, user_id, max_results):
+#     collected_tweets = []
+#     for i, tweets in enumerate(tweepy.Paginator(
+#         client.get_users_tweets,
+#         id=user_id,
+#         tweet_fields = [
+#             'context_annotations',
+#             'created_at',
+#             'geo',
+#             'lang',
+#             'public_metrics',
+#             'referenced_tweets',
+#             'in_reply_to_user_id',
+#         ],
+#         user_fields = [
+#             'profile_image_url',
+#             'name',
+#             'username',
+#             'created_at',
+#             'description',
+#             'entities',
+#             'location',
+#             'protected',
+#             'public_metrics',
+#             'verified',
+#         ],
+#         expansions='author_id',
+#         max_results=100,
+#     )):
+#         print(f"Batch {i}")
+#         if max_results and len(collected_tweets) >= max_results:
+#             break
 
-        users = {u["id"]: u for u in tweets.includes['users']}
-        for i, tweet in enumerate(tweets.data):
-            new_row = {}
-            if users[tweet.author_id]:
-                user = users[tweet.author_id]
-                new_row = {
-                    "tweet_text": tweet.text,
-                    "tweet_id": tweet.id,
-                    "tweet_created_at": tweet.created_at.strftime("%d-%b-%Y (%H:%M:%S.%f)"),
-                    "tweet_geo": tweet.geo["place_id"] if tweet.geo else None,
-                    "tweet_public_metrics": tweet.public_metrics,
-                    "tweet_in_reply_to_user_id": tweet.in_reply_to_user_id,
-                    "tweet_conversation_id": tweet.conversation_id,
-                    "tweet_lang": tweet.lang,
-                    "author_id": tweet.author_id,
-                    "author_name": user.name,
-                    "author_username": user.username,
-                    "author_created_at": user.created_at.strftime("%d-%b-%Y (%H:%M:%S.%f)"),
-                    "author_description": user.description,
-                    "author_entities": user.entities,
-                    "author_location": user.location,
-                    "author_is_protected": user.protected,
-                    "author_is_verified": user.verified,
-                    "author_profile_image_url": user.profile_image_url,
-                    "author_public_metrics": user.public_metrics
-                }
-                collected_tweets.append(new_row)
+#         users = {u["id"]: u for u in tweets.includes['users']}
+#         referenced_tweets = {
+#             referenced_tweet.id: referenced_tweet for referenced_tweet in tweets.includes["tweets"]
+#         }
+#         for i, tweet in enumerate(tweets.data):
+#             new_row = {}
+#             if users[tweet.author_id]:
+#                 user = users[tweet.author_id]
+#                 tweet_text = referenced_tweets[tweet.id].text
+#                 new_row = {
+#                     "tweet_text": tweet_text,
+#                     "tweet_id": tweet.id,
+#                     "tweet_created_at": tweet.created_at.strftime("%d-%b-%Y (%H:%M:%S.%f)"),
+#                     "tweet_geo": tweet.geo["place_id"] if tweet.geo else None,
+#                     "tweet_public_metrics": tweet.public_metrics,
+#                     "tweet_in_reply_to_user_id": tweet.in_reply_to_user_id,
+#                     "tweet_conversation_id": tweet.conversation_id,
+#                     "tweet_lang": tweet.lang,
+#                     "author_id": tweet.author_id,
+#                     "author_name": user.name,
+#                     "author_username": user.username,
+#                     "author_created_at": user.created_at.strftime("%d-%b-%Y (%H:%M:%S.%f)"),
+#                     "author_description": user.description,
+#                     "author_entities": user.entities,
+#                     "author_location": user.location,
+#                     "author_is_protected": user.protected,
+#                     "author_is_verified": user.verified,
+#                     "author_profile_image_url": user.profile_image_url,
+#                     "author_public_metrics": user.public_metrics
+#                 }
+#                 collected_tweets.append(new_row)
     
-    data = {
-        "query": user_id,
-        "query_id": FILE_UUID,
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "data": collected_tweets,
-    }
+#     data = {
+#         "query": user_id,
+#         "query_id": FILE_UUID,
+#         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+#         "data": collected_tweets,
+#     }
 
-    return data 
+#     return data 
 
 
 def upload_file(drive, data, filename, news_name):

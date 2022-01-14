@@ -93,3 +93,17 @@ cursor.execute(
   )
   """
 )
+
+cursor.execute(
+  """
+  CREATE TABLE IF NOT EXISTS places
+  (
+    place_id VARCHAR(360) PRIMARY KEY,
+    full_name VARCHAR(1000),
+    contained_within VARCHAR(1000),
+    country VARCHAR(300),
+    name VARCHAR(300),
+    type VARCHAR(300)
+  )
+  """
+)

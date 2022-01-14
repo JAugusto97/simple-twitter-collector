@@ -20,7 +20,9 @@ def load_credentials(filename):
 def collect_tweets_from_query(gdrive, client, query, max_results, news_id, save_batch_size):
     collected_tweets = []
     for i, tweets in enumerate(tweepy.Paginator(
-        client.search_recent_tweets,
+        client.search_all_tweets,
+        start_time="2022-01-01T00:00:00Z",
+        # end_time="2023-01-01T00:00:00Z",
         query=query,
         tweet_fields = [
             'context_annotations',
@@ -68,7 +70,8 @@ def collect_tweets_from_query(gdrive, client, query, max_results, news_id, save_
             "author_id",
             "referenced_tweets.id",
             "referenced_tweets.id.author_id",
-            "attachments.media_keys"
+            "attachments.media_keys",
+            "geo.place_id"
         ],
         max_results=100,
     )):
@@ -77,28 +80,31 @@ def collect_tweets_from_query(gdrive, client, query, max_results, news_id, save_
             print(f"collected {len(collected_tweets)} tweets.")
             break
 
-        # expansions
+        # get expansions
         users = {u["id"]: u for u in tweets.includes['users']}
-        referenced_tweets = {
-            referenced_tweet.id: referenced_tweet for referenced_tweet in tweets.includes.get("tweets")
-        }
-        media = {media["media_key"]: media for media in tweets.includes["media"]}
-        # places = {place["id"]: place for place in tweets.includes["places"]}
+        referenced_tweets = {referenced_tweet.id: referenced_tweet for referenced_tweet in tweets.includes.get("tweets")}
+        media = {media["media_key"]: media for media in tweets.includes.get("media")} if tweets.includes.get("media") else None
+        places = {place["id"]: place for place in tweets.includes.get("places")} if tweets.includes.get("places") else None
 
+
+        # get tweet info inside each object
         for i, tweet in enumerate(tweets.data):
             new_row = {}
         
             user = users[tweet.author_id]
-            # place = places[tweet.geo["place_id"]] if tweet.geo.get("place_id") else None
-            attachments = tweet['attachments']
-            if attachments:
-                media_keys = attachments.get('media_keys')
-            else:
-                media_keys = None
+            place = places[tweet.geo["place_id"]] if places and tweet.get("geo") else None
 
-            tweet_media = media.get(media_keys[0] if media_keys else media_keys)
-            # get referenced tweet if its a retweet (otherwise text is truncated)
-            tweet_text = referenced_tweets[tweet.referenced_tweets[0].id].text if tweet.get("referenced_tweets") else tweet.text
+            # get midia
+            attachments = tweet['attachments']
+            media_keys = attachments.get('media_keys') if attachments else None
+            tweet_media = media.get(media_keys[0] if media_keys else media_keys) if media else None
+
+            # get referenced tweet text if its a retweet (otherwise text is truncated)
+            if tweet.referenced_tweets and referenced_tweets.get(tweet.referenced_tweets[0].id):
+                tweet_text = referenced_tweets.get(tweet.referenced_tweets[0].id).text 
+            else:
+                tweet_text = tweet.text
+
             new_row = {
                 "tweet_text": tweet_text,
                 "tweet_id": tweet.id,
@@ -134,11 +140,16 @@ def collect_tweets_from_query(gdrive, client, query, max_results, news_id, save_
                             tweet_media["public_metrics"].get("view_count")
                         else None
                 ),
-
-                # "place_id": place.id,
-                # "place_full_name": place.full_name
-
+                
+                "place_id": place.get("id") if place else None,
+                "place_full_name": place.get("full_name") if place else None,
+                "place_contained_within": place.get("contained_within") if place else None,
+                "place_country": place.get("country") if place else None,
+                "place_geo": place.get("geo") if place else None,
+                "place_name": place.get("name") if place else None,
+                "place_type": place.get("place_type") if place else None,
             }
+
             collected_tweets.append(new_row)
 
             if len(collected_tweets) >= save_batch_size:
@@ -161,83 +172,11 @@ def collect_tweets_from_query(gdrive, client, query, max_results, news_id, save_
 
     upload_file(gdrive, data, f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}.json", news_id)
     
-# def collect_tweets_from_user_id(client, user_id, max_results):
-#     collected_tweets = []
-#     for i, tweets in enumerate(tweepy.Paginator(
-#         client.get_users_tweets,
-#         id=user_id,
-#         tweet_fields = [
-#             'context_annotations',
-#             'created_at',
-#             'geo',
-#             'lang',
-#             'public_metrics',
-#             'referenced_tweets',
-#             'in_reply_to_user_id',
-#         ],
-#         user_fields = [
-#             'profile_image_url',
-#             'name',
-#             'username',
-#             'created_at',
-#             'description',
-#             'entities',
-#             'location',
-#             'protected',
-#             'public_metrics',
-#             'verified',
-#         ],
-#         expansions='author_id',
-#         max_results=100,
-#     )):
-#         print(f"Batch {i}")
-#         if max_results and len(collected_tweets) >= max_results:
-#             break
-
-#         users = {u["id"]: u for u in tweets.includes['users']}
-#         referenced_tweets = {
-#             referenced_tweet.id: referenced_tweet for referenced_tweet in tweets.includes["tweets"]
-#         }
-#         for i, tweet in enumerate(tweets.data):
-#             new_row = {}
-#             if users[tweet.author_id]:
-#                 user = users[tweet.author_id]
-#                 tweet_text = referenced_tweets[tweet.id].text
-#                 new_row = {
-#                     "tweet_text": tweet_text,
-#                     "tweet_id": tweet.id,
-#                     "tweet_created_at": tweet.created_at.strftime("%d-%b-%Y (%H:%M:%S.%f)"),
-#                     "tweet_geo": tweet.geo["place_id"] if tweet.geo else None,
-#                     "tweet_public_metrics": tweet.public_metrics,
-#                     "tweet_in_reply_to_user_id": tweet.in_reply_to_user_id,
-#                     "tweet_conversation_id": tweet.conversation_id,
-#                     "tweet_lang": tweet.lang,
-#                     "author_id": tweet.author_id,
-#                     "author_name": user.name,
-#                     "author_username": user.username,
-#                     "author_created_at": user.created_at.strftime("%d-%b-%Y (%H:%M:%S.%f)"),
-#                     "author_description": user.description,
-#                     "author_entities": user.entities,
-#                     "author_location": user.location,
-#                     "author_is_protected": user.protected,
-#                     "author_is_verified": user.verified,
-#                     "author_profile_image_url": user.profile_image_url,
-#                     "author_public_metrics": user.public_metrics
-#                 }
-#                 collected_tweets.append(new_row)
-    
-#     data = {
-#         "query": user_id,
-#         "query_id": FILE_UUID,
-#         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-#         "data": collected_tweets,
-#     }
-
-#     return data 
-
-
 def upload_file(drive, data, filename, news_name):
     parent_id = "1xvHEH-O-VWF7gSeJ5HSo5HIOyiI1udqx" # raw_data
+    if not os.path.exists("raw_data"):
+        os.mkdir("raw_data")
+
     local_path = os.path.join("raw_data", news_name)
 
     # list of folders at raw_data

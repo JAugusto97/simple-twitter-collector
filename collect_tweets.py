@@ -182,12 +182,6 @@ def parse_args():
         "reference: https://developer.twitter.com/en/docs/twitter-api/v1/rules-and-filtering/search-operators"
     )
     parser.add_argument(
-        '--username',
-        default=None, 
-        type=str,
-        help="twitter username (@) to collect tweets from"
-    )
-    parser.add_argument(
         '--max_results', 
         type=int,
         default=None,
@@ -200,24 +194,12 @@ def parse_args():
         help='json file path containing twitter api credentials'
     )
     parser.add_argument(
-        '--user_ids_file', 
-        type=str,
-        default="user_ids.json",
-        help='json file path containing usernames to user_id mappings'
-    )
-    parser.add_argument(
         '--save_batch_size', 
         type=int,
         default=5000,
         help='save when batch_size tweets are collected'
     )
 
-    args = parser.parse_args()
-    query = args.query
-    username = args.username
-
-    if not query and not username:
-        raise Exception("Missing Query or Username")
 
     return args
 
@@ -231,7 +213,5 @@ if __name__ == "__main__":
 
     if args.query:
         data = collect_tweets_from_query(gdrive, client, args.query, args.max_results, args.news_id, args.save_batch_size)
-    
-    elif args.username:
-        tweet_id = get_tweet_id(args.user_ids_file, args.username)
-        data = collect_tweets_from_user_id(client, tweet_id, args.max_results)
+    else:
+        raise Exception("Missing Query")

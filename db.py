@@ -70,7 +70,7 @@ cursor.execute(
     url VARCHAR(580),
     created_at TIMESTAMP,
     search_query VARCHAR(1000),
-    prejudices_candidacy VARCHAR(360),
+    prejudices_candidacy VARCHAR(360)
     PRIMARY KEY(news_id, source)
   )
   """
@@ -89,6 +89,7 @@ cursor.execute(
     preview_image_url VARCHAR(360),
     alt_text VARCHAR(1000),
     view_count INT UNSIGNED,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY(media_key, tweet_id)
   )
   """
@@ -98,12 +99,15 @@ cursor.execute(
   """
   CREATE TABLE IF NOT EXISTS places
   (
-    place_id VARCHAR(360) PRIMARY KEY,
+    place_id VARCHAR(360) NOT NULL,
+    tweet_id VARCHAR(80) NOT NULL,
     full_name VARCHAR(1000),
     contained_within VARCHAR(1000),
     country VARCHAR(300),
     name VARCHAR(300),
-    type VARCHAR(300)
+    type VARCHAR(300),
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY(place_id, tweet_id)
   )
   """
 )

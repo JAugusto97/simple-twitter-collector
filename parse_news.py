@@ -50,6 +50,8 @@ def download_news_data(drive, news_id):
 def parse_datafile(drive, cursor, news_id):
     tweets = []
     users = []
+    media = []
+    places = []
     files = download_news_data(drive, news_id)
     for file in files:
         with open(file) as fp:
@@ -89,12 +91,37 @@ def parse_datafile(drive, cursor, news_id):
                     "listed_count": tweet["author_public_metrics"]["listed_count"],
                     "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 }
+                media_row = {
+                    "media_key": tweet["media_key"],
+                    "tweet_id": tweet["tweet_id"],
+                    "type": tweet["media_type"],
+                    "duration_ms": tweet["media_duration_ms"],
+                    "height": tweet["media_height"],
+                    "width": tweet["media_width"],
+                    "preview_image_url": tweet["media_preview_image_url"],
+                    "alt_text": tweet["media_alt_text"],
+                    "view_count":tweet["media_view_count"],
+                    "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                }
+
+                place_row = {
+                    "place_id": tweet["place_id"],
+                    "tweet_id": tweet["tweet_id"],
+                    "full_name": tweet["place_full_name"],
+                    "contained_within": tweet["place_contained_within"],
+                    "country": tweet["place_country"],
+                    "name": tweet["place_name"],
+                    "type": tweet["place_type"],
+                    "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                }
 
                 tweets.append(tweet_row)
                 users.append(user_row)
+                media.append(media_row)
+                places.append(place_row)
 
     if len(tweets) > 0:
-        for table_name, data in [("tweets", tweets), ("users", users)]:
+        for table_name, data in [("tweets", tweets), ("users", users), ("media", media), ("places", places)]:
             cols = ", ".join(data[0].keys())
             values = "".join([f"%({key})s," for key in data[0].keys()])[:-1]
             sql = \

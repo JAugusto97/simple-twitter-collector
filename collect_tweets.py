@@ -1,5 +1,3 @@
-import json
-import os
 import tweepy
 import argparse
 from datetime import datetime
@@ -7,7 +5,6 @@ from pydrive.drive import GoogleDrive
 from uuid import uuid4
 from utils import (
     auth_gdrive,
-    get_tweet_id,
     load_credentials,
     upload_file,
 )
@@ -200,7 +197,7 @@ def parse_args():
         help='save when batch_size tweets are collected'
     )
 
-
+    args = parser.parse_args()
     return args
 
 if __name__ == "__main__":

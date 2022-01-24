@@ -1,12 +1,12 @@
 import os
 import json
-import yaml
+from yaml import safe_load
 from pydrive.auth import GoogleAuth
 
 
 def load_configs(config_path):
     with open(config_path) as f:
-        configs = yaml.safe_load(f, yaml.Loader)
+        configs = safe_load(f)
         
     credentials_cfg = configs.get("credentials")
     storage_cfg = configs.get("storage")

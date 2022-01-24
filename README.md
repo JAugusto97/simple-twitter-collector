@@ -11,16 +11,18 @@ A simple tweet collector wrapper built on top of tweepy and optionally integrate
    ```python3 collect_tweets.py```
 
 ## 🔧 Configuration File
+You can modify the **config.yaml** file to suit your needs. Some fields are optional if you want to upload your files to Google Drive. Below you will find the description of the fields you can modify. Required fields are in bold.
+
 - credentials
-  - twitter_credentials (str): path to your Twitter API credentials file.
+  - **twitter_credentials** (str): path to your Twitter API credentials file.
   - google_drive_credentials (str, optional): path to your Google Drive API credentials file.
 - storage
   - gdrive_folder_id (str, optional): Google Drive folder ID where your tweets will be dumped into. To get this, simply create or access the desired folder inside your Google Drive and copy the url after "/folders/": https://drive.google.com/drive/u/1/folders/<folder_id>
-  - dump_to_google_drive (bool): true if you want to upload your tweets to Google Drive (must set other related parameters) or false if you want to save them locally.
-  - local_folder (str): a local folder path to save the tweets into.
+  - **dump_to_google_drive** (bool): true if you want to upload your tweets to Google Drive (must set other related parameters) or false if you want to save them locally.
+  - **local_folder** (str): a local folder path to save the tweets into.
 - collector
-  - task_id (str): your tweets will be saved inside a folder with this name, either locally or on Google Drive. It does not override the folder if it already exists. You can use this to keep track of multiple tweet collection tasks.
-  - query (str): will collect the tweets mentioning this string. You can create more sophisticated Twitter queries that suit your needs using this [documentation](https://developer.twitter.com/en/docs/twitter-api/tweets/search/integrate/build-a-query). 
+  - **task_id** (str): your tweets will be saved inside a folder with this name, either locally or on Google Drive. It does not override the folder if it already exists. You can use this to keep track of multiple tweet collection tasks.
+  - **query** (str): will collect the tweets mentioning this string. You can create more sophisticated Twitter queries that suit your needs using this [documentation](https://developer.twitter.com/en/docs/twitter-api/tweets/search/integrate/build-a-query). 
   - max_results (int, optional): collect up to this number of tweets. If null, will collect everything.
   - dump_batch_size (int, optional): dump a batch of this number of tweets. If null, will dump a single file containing every tweet. 
   - start_time (string, optional): string timestamp to collect tweets starting from this period of time. If null, will collect tweets starting from any period of time. Format is "yyyy-mm-ddThh-mm-ssZ"

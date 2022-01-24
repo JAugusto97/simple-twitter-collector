@@ -81,7 +81,7 @@ def collect_tweets_from_query(
         ],
         max_results=100
     )):
-        print(f"Batch {i}")
+        print(f"Page {i+1}")
         if (max_results and len(collected_tweets) >= max_results) or not (tweets.includes.get('users')):
             print(f"collected {len(collected_tweets)} tweets.")
             break

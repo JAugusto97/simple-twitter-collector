@@ -2,7 +2,7 @@ import os
 import json
 from yaml import safe_load
 from pydrive.auth import GoogleAuth
-
+from loguru import logger
 
 def load_configs(config_path):
     with open(config_path) as f:
@@ -12,25 +12,34 @@ def load_configs(config_path):
     storage_cfg = configs.get("storage")
     collector_cfg = configs.get("collector")
 
-    print(5*"-"+"Configs:"+5*"-")
-    print("Credentials:")
-    print(f"Twitter Credentials: {credentials_cfg.get('twitter_credentials')}")
-    print(f"Google Drive Credentials: {credentials_cfg.get('google_drive_credentials')}")
+    logger.debug(
+        f"""
+        -----Configs-----
+        Credentials:
+            Twitter Credentials: {credentials_cfg.get('twitter_credentials')} 
+            Google Drive Credentials: {credentials_cfg.get('google_drive_credentials')}
 
-    print("\nStorage:")
-    print(f"Dump To Google Drive: {storage_cfg.get('dump_to_google_drive')}")
-    print(f"Main Google Drive Folder ID: {storage_cfg.get('gdrive_folder_id')}")
-    print(f"Local Folder: {storage_cfg.get('local_folder')}")
+        Storage:
+            Dump To Google Drive: {storage_cfg.get('dump_to_google_drive')} 
+            Main Google Drive Folder ID: {storage_cfg.get('gdrive_folder_id')}
+            Local Folder: {storage_cfg.get('local_folder')} 
 
-    print("\nCollector:")
-    print(f"Task ID: {collector_cfg.get('task_id')}")
-    print(f"Query: {collector_cfg.get('query')}")
-    print(f"Max Results: {collector_cfg.get('max_results')}")
-    print(f"Dump Batch Size: {collector_cfg.get('dump_batch_size')}")
-    print(f"Start Time: {collector_cfg.get('start_time')}")
-    print(f"End Time: {collector_cfg.get('end_time')}")
-    print(18*"-"+"\n") 
+        Collector:
+            Task ID: {collector_cfg.get('task_id')} 
+            Query: {collector_cfg.get('query')}
+            Max Results: {collector_cfg.get('max_results')}
+            Dump Batch Size: {collector_cfg.get('dump_batch_size')}
+            Start Time: {collector_cfg.get('start_time')} 
+            End Time: {collector_cfg.get('end_time')}
+        """ + 18*"-")
 
+    logger.info(
+        f"""
+        Collecting Tweets...
+        Task ID: {collector_cfg.get('task_id')}
+        Query: {collector_cfg.get('query')}
+        """
+    )
     return credentials_cfg, storage_cfg, collector_cfg
 
 
@@ -55,6 +64,7 @@ def dump_data(drive, data, filename, task_id, gdrive_folder_id, local_folder):
         os.mkdir(local_path)
 
     filepath = os.path.join(local_path, filename)
+    logger.debug(f"LOCAL: Dumping {filename} to {local_path}")
     with open(filepath, "w") as fp:
         json.dump(data, fp)
 
@@ -89,6 +99,7 @@ def dump_data(drive, data, filename, task_id, gdrive_folder_id, local_folder):
             'mimeType': 'application/json' if filename.endswith(".json") else 'application/vnd.ms-excel'
         }
 
+        logger.debug(f"GDRIVE: Dumping {filename} to {task_id}")
         # upload to google drive
         gfile = drive.CreateFile(file_metadata)
         gfile.SetContentFile(filepath)
@@ -101,10 +112,13 @@ def auth_gdrive(client_secrets_path, cache_file="credentials/cached_google_crede
     gauth.LoadCredentialsFile(cache_file)
     gauth.DEFAULT_SETTINGS['client_config_file'] = client_secrets_path
     if gauth.credentials is None:
+        logger.debug("No GDrive credentials cache found. Initializating GDrive Web Server Auth")
         gauth.LocalWebserverAuth()
     elif gauth.access_token_expired:
+        logger.debug("Refreshing Gdrive Access token.")
         gauth.Refresh()
     else:
+        logger.debug("Credentials cache found.")
         gauth.Authorize()
     # Save the current credentials to a file
     gauth.SaveCredentialsFile(cache_file)

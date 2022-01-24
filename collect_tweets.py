@@ -8,6 +8,13 @@ from utils import (
     load_credentials,
     dump_data,
 )
+from loguru import logger
+from sys import stderr
+from os import getenv
+
+loglevel = getenv("LOGLEVEL", "INFO").upper()
+logger.remove()
+logger.add(stderr, level=loglevel)
 
 def collect_tweets_from_query(
     gdrive,
@@ -203,7 +210,7 @@ if __name__ == "__main__":
 
     if storage_cfg.get("dump_to_google_drive"):
         google_credentials = credentials_cfg.get("google_drive_credentials")
-        if google_credentials and credentials_cfg.get("gdrive_folder_id"):
+        if google_credentials and storage_cfg.get("gdrive_folder_id"):
             gauth = auth_gdrive(google_credentials)
             gdrive = GoogleDrive(gauth)
         else:

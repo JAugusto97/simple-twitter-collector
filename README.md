@@ -27,5 +27,20 @@ You can modify the **config.yaml** file to suit your needs. Some fields are opti
   - dump_batch_size (int, optional): dump a batch of this number of tweets. If null, will dump a single file containing every tweet. 
   - start_time (string, optional): string timestamp to collect tweets starting from this period of time. If null, will collect tweets starting from any period of time. Format is "yyyy-mm-ddThh-mm-ssZ"
   - end_time (string, optional): string timestamp to collect tweets up to this period of time. If null, will collect tweets up to any period of time. Format is "yyyy-mm-ddThh-mm-ssZ". end_time must always be a timestamp before than your current timestamp.
+
+## 🔍 Tweet Fields Retrieved
+| tweet               | author            | media             | place            |
+|---------------------|-------------------|-------------------|------------------|
+| text                | id                | key               | id               |
+| id                  | name              | type              | full_name        |
+| created_at          | username          | duration_ms       | contained_within |
+| public_metrics      | created_at        | height            | country          |
+| in_reply_to_user_id | description       | width             | geo              |
+| conversation_id     | entities          | preview_image_url | name             |
+| lang                | location          | alt_text          | type             |
+|                     | is_protected      | view_count        |                  |
+|                     | is_verified       |                   |                  |
+|                     | profile_image_url |                   |                  |
+|                     | public_metrics    |                   |                  |
 ## ❗ Academic Research Access
-If your API keys have default access, some of the fields retrieved (like detailed location info) will always be empty, because you don't have access to that. If you're a researcher, you can ask Twitter for elevated access [here](https://developer.twitter.com/en/products/twitter-api/academic-research).
+If your API keys have default access, some of the fields retrieved (like places) will always be empty, because you don't have access to that. If you're a researcher, you can ask Twitter for elevated access [here](https://developer.twitter.com/en/products/twitter-api/academic-research).

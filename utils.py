@@ -6,7 +6,8 @@ from pydrive.auth import GoogleAuth
 
 def load_configs(config_path):
     with open(config_path) as f:
-        configs = yaml.load(f, yaml.Loader)
+        configs = yaml.safe_load(f, yaml.Loader)
+        
     credentials_cfg = configs.get("credentials")
     storage_cfg = configs.get("storage")
     collector_cfg = configs.get("collector")

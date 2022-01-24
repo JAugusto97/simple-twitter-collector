@@ -4,9 +4,12 @@ credentials:
     google_drive_credentials: null
 storage:
     gdrive_folder_id: null
-    dump_to_google_drive: false
+    dump_to_google_drive: false 
     local_folder: "/tmp/"
 collector:
+    task_id: "task_example"
+    query: "example"
+    max_results: null
     dump_batch_size: null
     start_time: null
     end_time: null

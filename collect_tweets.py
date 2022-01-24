@@ -1,5 +1,4 @@
 import tweepy
-import argparse
 from datetime import datetime
 from pydrive.drive import GoogleDrive
 from uuid import uuid4
@@ -190,55 +189,40 @@ def collect_tweets_from_query(
         local_folder=local_folder
     )
 
-def parse_args():
-    parser = argparse.ArgumentParser(description='Simple Tweet Collector')
-    parser.add_argument(
-        'task_id',
-        type=str,
-        help="Unique task identifier. Will dump the collected tweets in a folder with this name."
-    )
-    parser.add_argument(
-        'query',
-        type=str,
-        help="string to query twitter."
-        "reference: https://developer.twitter.com/en/docs/twitter-api/v1/rules-and-filtering/search-operators"
-    )
-    parser.add_argument(
-        '--max_results', 
-        type=int,
-        default=None,
-        help='defines maximum amount of tweets to collect. None collects everything.'
-    )
-    args = parser.parse_args()
-    return args
-
 if __name__ == "__main__":
-    args = parse_args()
     credentials_cfg, storage_cfg, collector_cfg = load_configs("config.yaml")
 
+    if not collector_cfg.get("task_id"):
+        raise Exception("Missing Task ID configuration attribute")
+    if not collector_cfg.get("query"):
+        raise Exception("Missing search query configuration attribute")
+    if not storage_cfg.get("local_folder"):
+        raise Exception("Missing local folder configuration attribute")
+    if not credentials_cfg.get("twitter_credentials"):
+        raise Exception("Missing Twitter credentials configuration attribute")
+
     if storage_cfg.get("dump_to_google_drive"):
-        gauth = auth_gdrive(credentials_cfg.get("google_drive_credentials"))
-        gdrive = GoogleDrive(gauth)
+        google_credentials = credentials_cfg.get("google_drive_credentials")
+        if google_credentials and credentials_cfg.get("gdrive_folder_id"):
+            gauth = auth_gdrive(google_credentials)
+            gdrive = GoogleDrive(gauth)
+        else:
+            raise Exception("Missing Google Drive credentials or Folder ID configuration attributes")
     else:
         gdrive = None
     
     _, _, bearer_token = load_credentials(credentials_cfg.get("twitter_credentials"))
-    client = tweepy.Client(bearer_token=bearer_token, wait_on_rate_limit=True)
 
+    client = tweepy.Client(bearer_token=bearer_token, wait_on_rate_limit=True)
     data = collect_tweets_from_query(
         client=client,
-        task_id=args.task_id,
-        query=args.query,
+        task_id=collector_cfg.get("task_id"),
+        query=collector_cfg.get("query"),
         start_time=collector_cfg.get("start_time"),
         end_time=collector_cfg.get("end_time"),
-        max_results=args.max_results,
+        max_results=collector_cfg.get("max_results"),
         dump_batch_size=collector_cfg.get("dump_batch_size"),
         gdrive_folder_id=storage_cfg.get("gdrive_folder_id"),
-        gdrive=gdrive,
-        local_folder=storage_cfg.get("local_folder")
+        local_folder=storage_cfg.get("local_folder"),
+        gdrive=gdrive
     )
-    
-    #todo 
-    # dump to local folder if needed
-    # logging
-    # documentation

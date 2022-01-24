@@ -23,6 +23,9 @@ def load_configs(config_path):
     print(f"Local Folder: {storage_cfg.get('local_folder')}")
 
     print("\nCollector:")
+    print(f"Task ID: {collector_cfg.get('task_id')}")
+    print(f"Query: {collector_cfg.get('query')}")
+    print(f"Max Results: {collector_cfg.get('max_results')}")
     print(f"Dump Batch Size: {collector_cfg.get('dump_batch_size')}")
     print(f"Start Time: {collector_cfg.get('start_time')}")
     print(f"End Time: {collector_cfg.get('end_time')}")

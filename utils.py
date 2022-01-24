@@ -1,8 +1,34 @@
 import os
 import json
-from datetime import datetime
-import tweepy
+import yaml
 from pydrive.auth import GoogleAuth
+
+
+def load_configs(config_path):
+    with open(config_path) as f:
+        configs = yaml.load(f, yaml.Loader)
+    credentials_cfg = configs.get("credentials")
+    storage_cfg = configs.get("storage")
+    collector_cfg = configs.get("collector")
+
+    print(5*"-"+"Configs:"+5*"-")
+    print("Credentials:")
+    print(f"Twitter Credentials: {credentials_cfg.get('twitter_credentials')}")
+    print(f"Google Drive Credentials: {credentials_cfg.get('google_drive_credentials')}")
+
+    print("\nStorage:")
+    print(f"Dump To Google Drive: {storage_cfg.get('dump_to_google_drive')}")
+    print(f"Main Google Drive Folder ID: {storage_cfg.get('gdrive_folder_id')}")
+    print(f"Local Folder: {storage_cfg.get('local_folder')}")
+
+    print("\nCollector:")
+    print(f"Dump Batch Size: {collector_cfg.get('dump_batch_size')}")
+    print(f"Start Time: {collector_cfg.get('start_time')}")
+    print(f"End Time: {collector_cfg.get('end_time')}")
+    print(18*"-"+"\n") 
+
+    return credentials_cfg, storage_cfg, collector_cfg
+
 
 def load_credentials(filename):
     with open(filename) as fp:
@@ -14,43 +40,13 @@ def load_credentials(filename):
 
     return consumer_key, consumer_secret, bearer_token
 
-def upload_file(drive, data, filename, news_name):
-    parent_id = "1xvHEH-O-VWF7gSeJ5HSo5HIOyiI1udqx" # raw_data
-    if not os.path.exists("raw_data"):
-        os.mkdir("raw_data")
+def dump_data(drive, data, filename, task_id, gdrive_folder_id, local_folder):
+    if not os.path.exists(local_folder):
+        os.mkdir(local_folder)
 
-    local_path = os.path.join("raw_data", news_name)
+    local_path = os.path.join(local_folder, task_id)
 
-    # list of folders at raw_data
-    file_list = drive.ListFile(
-        {'q': f"'{parent_id}' in parents and trashed=false"}
-    ).GetList()
-    filename_list = {f["title"]: f["id"] for f in file_list}
-
-    # create folder if not exists
-    if news_name not in filename_list.keys():
-        folder_metadata = {
-            'title': news_name,
-            'parents': [
-                {"id": f"{parent_id}", "kind": "drive#childList"}
-            ],
-            'mimeType': 'application/vnd.google-apps.folder'
-        }
-
-        folder = drive.CreateFile(folder_metadata)
-        folder.Upload()
-        folder_id = folder.get("id")
-    else:
-        folder_id = filename_list[news_name]
-
-    # upload file to folder
-    file_metadata = {
-        'title': filename,
-        'parents': [{"id": folder_id, "kind": "drive#childList"}], # eleicoes2022/raw_data/news_name
-        'mimeType': 'application/json' if filename.endswith(".json") else 'application/vnd.ms-excel'
-    }
-
-    # dump file locally
+     # dump file locally
     if not os.path.exists(local_path):
         os.mkdir(local_path)
 
@@ -58,17 +54,48 @@ def upload_file(drive, data, filename, news_name):
     with open(filepath, "w") as fp:
         json.dump(data, fp)
 
-    # upload to google drive
-    gfile = drive.CreateFile(file_metadata)
-    gfile.SetContentFile(filepath)
-    gfile.Upload()
+    if drive:
+        parent_id = gdrive_folder_id
+        # list of folders at raw_data
+        file_list = drive.ListFile(
+            {'q': f"'{parent_id}' in parents and trashed=false"}
+        ).GetList()
+        filename_list = {f["title"]: f["id"] for f in file_list}
 
-def auth_gdrive(cache_file="credentials/cached_google_credentials.txt"):
+        # create folder if not exists
+        if task_id not in filename_list.keys():
+            folder_metadata = {
+                'title': task_id,
+                'parents': [
+                    {"id": f"{parent_id}", "kind": "drive#childList"}
+                ],
+                'mimeType': 'application/vnd.google-apps.folder'
+            }
+
+            folder = drive.CreateFile(folder_metadata)
+            folder.Upload()
+            folder_id = folder.get("id")
+        else:
+            folder_id = filename_list[task_id]
+
+        # upload file to folder
+        file_metadata = {
+            'title': filename,
+            'parents': [{"id": folder_id, "kind": "drive#childList"}],
+            'mimeType': 'application/json' if filename.endswith(".json") else 'application/vnd.ms-excel'
+        }
+
+        # upload to google drive
+        gfile = drive.CreateFile(file_metadata)
+        gfile.SetContentFile(filepath)
+        gfile.Upload()
+
+def auth_gdrive(client_secrets_path, cache_file="credentials/cached_google_credentials.txt"):
     gauth = GoogleAuth()             
 
     # Try to load cached client credentials, else launch webserver to auth
     gauth.LoadCredentialsFile(cache_file)
-    gauth.DEFAULT_SETTINGS['client_config_file'] = "credentials/client_secrets.json"
+    gauth.DEFAULT_SETTINGS['client_config_file'] = client_secrets_path
     if gauth.credentials is None:
         gauth.LocalWebserverAuth()
     elif gauth.access_token_expired:

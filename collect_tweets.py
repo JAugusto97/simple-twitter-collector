@@ -1,20 +1,34 @@
+from ast import dump
 import tweepy
+import json
 import argparse
 from datetime import datetime
 from pydrive.drive import GoogleDrive
 from uuid import uuid4
 from utils import (
     auth_gdrive,
+    load_configs,
     load_credentials,
-    upload_file,
+    dump_data,
 )
 
-def collect_tweets_from_query(gdrive, client, query, max_results, news_id, save_batch_size):
+def collect_tweets_from_query(
+    gdrive,
+    client,
+    query,
+    start_time,
+    end_time,
+    max_results,
+    task_id,
+    dump_batch_size,
+    gdrive_folder_id,
+    local_folder
+):
     collected_tweets = []
     for i, tweets in enumerate(tweepy.Paginator(
         client.search_all_tweets,
-        start_time="2022-01-01T00:00:00Z",
-        # end_time="2023-01-01T00:00:00Z",
+        start_time=start_time,
+        end_time=end_time,
         query=query,
         tweet_fields = [
             'context_annotations',
@@ -65,7 +79,7 @@ def collect_tweets_from_query(gdrive, client, query, max_results, news_id, save_
             "attachments.media_keys",
             "geo.place_id"
         ],
-        max_results=100,
+        max_results=100
     )):
         print(f"Batch {i}")
         if (max_results and len(collected_tweets) >= max_results) or not (tweets.includes.get('users')):
@@ -144,15 +158,22 @@ def collect_tweets_from_query(gdrive, client, query, max_results, news_id, save_
 
             collected_tweets.append(new_row)
 
-            if len(collected_tweets) >= save_batch_size:
+            if dump_batch_size and len(collected_tweets) >= dump_batch_size:
                 data = {
                     "query": query,
                     "query_id": str(uuid4()),
                     "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     "data": collected_tweets,
                 }
+                dump_data(
+                    drive=gdrive,
+                    data=data,
+                    filename=f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}.json",
+                    task_id=task_id,
+                    gdrive_folder_id=gdrive_folder_id,
+                    local_folder=local_folder
+                )
 
-                upload_file(gdrive, data, f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}.json", news_id)
                 collected_tweets = []
 
     data = {
@@ -162,18 +183,24 @@ def collect_tweets_from_query(gdrive, client, query, max_results, news_id, save_
         "data": collected_tweets,
     }
 
-    upload_file(gdrive, data, f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}.json", news_id)
+    dump_data(
+        drive=gdrive,
+        data=data,
+        filename=f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}.json",
+        task_id=task_id,
+        gdrive_folder_id=gdrive_folder_id,
+        local_folder=local_folder
+    )
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Collect tweets.')
+    parser = argparse.ArgumentParser(description='Simple Tweet Collector')
     parser.add_argument(
-        'news_id',
+        'task_id',
         type=str,
-        help="unique news identifier"
+        help="Unique task identifier. Will dump the collected tweets in a folder with this name."
     )
     parser.add_argument(
-        '--query',
-        default=None,
+        'query',
         type=str,
         help="string to query twitter."
         "reference: https://developer.twitter.com/en/docs/twitter-api/v1/rules-and-filtering/search-operators"
@@ -184,31 +211,36 @@ def parse_args():
         default=None,
         help='defines maximum amount of tweets to collect. None collects everything.'
     )
-    parser.add_argument(
-        '--credentials_file', 
-        type=str,
-        default="credentials/twitter_credentials.json",
-        help='json file path containing twitter api credentials'
-    )
-    parser.add_argument(
-        '--save_batch_size', 
-        type=int,
-        default=5000,
-        help='save when batch_size tweets are collected'
-    )
-
     args = parser.parse_args()
     return args
 
 if __name__ == "__main__":
     args = parse_args()
-    gauth = auth_gdrive()
-    gdrive = GoogleDrive(gauth)  
-    
-    consumer_key, consumer_secret, bearer_token = load_credentials(args.credentials_file)
-    client = tweepy.Client(bearer_token=bearer_token)
+    credentials_cfg, storage_cfg, collector_cfg = load_configs("config.yaml")
 
-    if args.query:
-        data = collect_tweets_from_query(gdrive, client, args.query, args.max_results, args.news_id, args.save_batch_size)
+    if storage_cfg.get("dump_to_google_drive"):
+        gauth = auth_gdrive(credentials_cfg.get("google_drive_credentials"))
+        gdrive = GoogleDrive(gauth)
     else:
-        raise Exception("Missing Query")
+        gdrive = None
+    
+    _, _, bearer_token = load_credentials(credentials_cfg.get("twitter_credentials"))
+    client = tweepy.Client(bearer_token=bearer_token, wait_on_rate_limit=True)
+
+    data = collect_tweets_from_query(
+        client=client,
+        task_id=args.task_id,
+        query=args.query,
+        start_time=collector_cfg.get("start_time"),
+        end_time=collector_cfg.get("end_time"),
+        max_results=args.max_results,
+        dump_batch_size=collector_cfg.get("dump_batch_size"),
+        gdrive_folder_id=storage_cfg.get("gdrive_folder_id"),
+        gdrive=gdrive,
+        local_folder=storage_cfg.get("local_folder")
+    )
+    
+    #todo 
+    # dump to local folder if needed
+    # logging
+    # documentation

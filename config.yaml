@@ -1,0 +1,13 @@
+
+credentials:
+    twitter_credentials: "credentials/twitter_credentials.json"
+    google_drive_credentials: "credentials/client_secrets.json"
+storage:
+    gdrive_folder_id: "1xvHEH-O-VWF7gSeJ5HSo5HIOyiI1udqx"
+    dump_to_google_drive: false
+    local_folder: "/tmp/"
+collector:
+    dump_batch_size: 100
+    start_time: "2022-01-01T00:00:00Z"
+    end_time: null
+

@@ -33,7 +33,7 @@ def load_configs(config_path):
             End Time: {collector_cfg.get('end_time')}
         """ + 18*"-")
 
-    logger.info(
+    print(
         f"""
         Collecting Tweets...
         Task ID: {collector_cfg.get('task_id')}

@@ -29,6 +29,7 @@ def collect_tweets_from_query(
     local_folder
 ):
     collected_tweets = []
+    total_collected = 0
     for i, tweets in enumerate(tweepy.Paginator(
         client.search_all_tweets,
         start_time=start_time,
@@ -85,9 +86,8 @@ def collect_tweets_from_query(
         ],
         max_results=100
     )):
-        print(f"Page {i+1}")
+        logger.info(f"Retrieved page {i+1} -- Collected {total_collected} tweets so far.")
         if (max_results and len(collected_tweets) >= max_results) or not (tweets.includes.get('users')):
-            print(f"collected {len(collected_tweets)} tweets.")
             break
 
         # get expansions
@@ -161,6 +161,7 @@ def collect_tweets_from_query(
             }
 
             collected_tweets.append(new_row)
+            total_collected += 1
 
             if dump_batch_size and len(collected_tweets) >= dump_batch_size:
                 data = {
@@ -177,7 +178,6 @@ def collect_tweets_from_query(
                     gdrive_folder_id=gdrive_folder_id,
                     local_folder=local_folder
                 )
-
                 collected_tweets = []
 
     data = {
@@ -195,6 +195,8 @@ def collect_tweets_from_query(
         gdrive_folder_id=gdrive_folder_id,
         local_folder=local_folder
     )
+
+    print(f"Execution ended. Collected {total_collected} tweets.")
 
 if __name__ == "__main__":
     credentials_cfg, storage_cfg, collector_cfg = load_configs("config.yaml")

@@ -1,6 +1,4 @@
-from ast import dump
 import tweepy
-import json
 import argparse
 from datetime import datetime
 from pydrive.drive import GoogleDrive

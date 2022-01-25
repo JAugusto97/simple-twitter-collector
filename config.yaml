@@ -1,10 +1,10 @@
 
 credentials:
-    twitter_credentials: "credentials/twitter_credentials_default.json"
-    google_drive_credentials: "credentials/client_secrets.json" 
+    twitter_credentials: "credentials/twitter_credentials.json"
+    google_drive_credentials: null
     is_twitter_elevated_access: false
 storage:
-    gdrive_folder_id: "1xvHEH-O-VWF7gSeJ5HSo5HIOyiI1udqx"
+    gdrive_folder_id: null
     dump_to_google_drive: true 
     local_folder: "/tmp/"
 collector:

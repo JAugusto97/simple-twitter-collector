@@ -1,16 +1,17 @@
 
 credentials:
-    twitter_credentials: "credentials/twitter_credentials.json"
-    google_drive_credentials: null
+    twitter_credentials: "credentials/twitter_credentials_default.json"
+    google_drive_credentials: "credentials/client_secrets.json" 
+    is_twitter_elevated_access: false
 storage:
-    gdrive_folder_id: null
-    dump_to_google_drive: false 
+    gdrive_folder_id: "1xvHEH-O-VWF7gSeJ5HSo5HIOyiI1udqx"
+    dump_to_google_drive: true 
     local_folder: "/tmp/"
 collector:
     task_id: "task_example"
     query: "example"
     max_results: null
-    dump_batch_size: null
+    dump_batch_size: 1000
     start_time: null
     end_time: null
 

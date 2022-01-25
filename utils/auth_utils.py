@@ -1,4 +1,3 @@
-import os
 import json
 from yaml import safe_load
 from pydrive.auth import GoogleAuth
@@ -18,6 +17,7 @@ def load_configs(config_path):
         Credentials:
             Twitter Credentials: {credentials_cfg.get('twitter_credentials')} 
             Google Drive Credentials: {credentials_cfg.get('google_drive_credentials')}
+            Has Twitter Elevated Access: {credentials_cfg.get('is_twitter_elevated_access')}
 
         Storage:
             Dump To Google Drive: {storage_cfg.get('dump_to_google_drive')} 
@@ -53,57 +53,6 @@ def load_credentials(filename):
 
     return consumer_key, consumer_secret, bearer_token
 
-def dump_data(drive, data, filename, task_id, gdrive_folder_id, local_folder):
-    if not os.path.exists(local_folder):
-        os.mkdir(local_folder)
-
-    local_path = os.path.join(local_folder, task_id)
-
-     # dump file locally
-    if not os.path.exists(local_path):
-        os.mkdir(local_path)
-
-    filepath = os.path.join(local_path, filename)
-    logger.debug(f"LOCAL: Dumping {filename} to {local_path}")
-    with open(filepath, "w") as fp:
-        json.dump(data, fp)
-
-    if drive:
-        parent_id = gdrive_folder_id
-        # list of folders at raw_data
-        file_list = drive.ListFile(
-            {'q': f"'{parent_id}' in parents and trashed=false"}
-        ).GetList()
-        filename_list = {f["title"]: f["id"] for f in file_list}
-
-        # create folder if not exists
-        if task_id not in filename_list.keys():
-            folder_metadata = {
-                'title': task_id,
-                'parents': [
-                    {"id": f"{parent_id}", "kind": "drive#childList"}
-                ],
-                'mimeType': 'application/vnd.google-apps.folder'
-            }
-
-            folder = drive.CreateFile(folder_metadata)
-            folder.Upload()
-            folder_id = folder.get("id")
-        else:
-            folder_id = filename_list[task_id]
-
-        # upload file to folder
-        file_metadata = {
-            'title': filename,
-            'parents': [{"id": folder_id, "kind": "drive#childList"}],
-            'mimeType': 'application/json' if filename.endswith(".json") else 'application/vnd.ms-excel'
-        }
-
-        logger.debug(f"GDRIVE: Dumping {filename} to {task_id}")
-        # upload to google drive
-        gfile = drive.CreateFile(file_metadata)
-        gfile.SetContentFile(filepath)
-        gfile.Upload()
 
 def auth_gdrive(client_secrets_path, cache_file="credentials/cached_google_credentials.txt"):
     gauth = GoogleAuth()             
@@ -125,9 +74,3 @@ def auth_gdrive(client_secrets_path, cache_file="credentials/cached_google_crede
 
     return gauth
 
-def get_tweet_id(filename, username):
-    with open(filename) as fp:
-        tweet_ids = json.load(fp)
-
-    tweet_id = tweet_ids.get(username)
-    return tweet_id

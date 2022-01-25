@@ -16,6 +16,7 @@ You can modify the **config.yaml** file to suit your needs. Some fields are opti
 - credentials
   - **twitter_credentials** (str): path to your Twitter API credentials file.
   - google_drive_credentials (str, optional): path to your Google Drive API credentials file.
+  - **is_twitter_elevated_access** (str): true if you have elevated access to Twitter API, false otherwhise. If you don't have elevated access, you can only collect tweets from up to 1 week ago, so **start_date** and **end_date** don't need to be specified.
 - storage
   - gdrive_folder_id (str, optional): Google Drive folder ID where your tweets will be dumped into. To get this, simply create or access the desired folder inside your Google Drive and copy the url after "/folders/": https://drive.google.com/drive/u/1/folders/<folder_id>
   - **dump_to_google_drive** (bool): true if you want to upload your tweets to Google Drive (must set other related parameters) or false if you want to save them locally.
@@ -43,5 +44,5 @@ These are the data fields that will be collected. You can find more details [her
 |                     | is_verified       |                   |                  |
 |                     | profile_image_url |                   |                  |
 |                     | public_metrics    |                   |                  |
-## ❗ Academic Research Access
-If your API keys have default access, some of the fields retrieved (like places) will always be empty, because you don't have access to that. If you're a researcher, you can ask Twitter for elevated access [here](https://developer.twitter.com/en/products/twitter-api/academic-research).
+## ❗ Elevated Access to Twitter API
+If your API keys have default access, some of the fields retrieved might always be empty. Also, if you don't have elevated access, you can only collect tweets from up to 1 week ago. If you're a researcher, you can ask Twitter for elevated access [here](https://developer.twitter.com/en/products/twitter-api/academic-research).

@@ -185,7 +185,7 @@ def collect_tweets_elevated(
                 "author_public_metrics": user.public_metrics,
 
                 "media_key": tweet_media.get("media_key") if tweet_media else None,
-                "media_type": tweet_media.get("media_type") if tweet_media else None,
+                "media_type": tweet_media.get("type") if tweet_media else None,
                 "media_duration_ms": tweet_media.get("duration_ms") if tweet_media else None,
                 "media_height": tweet_media.get("height") if tweet_media else None,
                 "media_width": tweet_media.get("width") if tweet_media else None,

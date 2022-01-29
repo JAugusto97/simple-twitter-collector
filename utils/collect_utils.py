@@ -140,7 +140,6 @@ def collect_tweets_elevated(
 
         # get expansions
         users = {u["id"]: u for u in tweets.includes['users']}
-        referenced_tweets = {referenced_tweet.id: referenced_tweet for referenced_tweet in tweets.includes.get("tweets")}
         media = {media["media_key"]: media for media in tweets.includes.get("media")} if tweets.includes.get("media") else None
         places = {place["id"]: place for place in tweets.includes.get("places")} if tweets.includes.get("places") else None
 
@@ -157,20 +156,15 @@ def collect_tweets_elevated(
             media_keys = attachments.get('media_keys') if attachments else None
             tweet_media = media.get(media_keys[0] if media_keys else media_keys) if media else None
 
-            # get referenced tweet text if its a retweet (otherwise text is truncated)
-            if tweet.referenced_tweets and referenced_tweets.get(tweet.referenced_tweets[0].id):
-                tweet_text = referenced_tweets.get(tweet.referenced_tweets[0].id).text 
-            else:
-                tweet_text = tweet.text
-
             new_row = {
-                "tweet_text": tweet_text,
+                "tweet_text": tweet.text,
                 "tweet_id": tweet.id,
                 "tweet_created_at": tweet.created_at.strftime("%Y-%m-%d %H:%M:%S"),
                 "tweet_public_metrics": tweet.public_metrics,
                 "tweet_in_reply_to_user_id": tweet.in_reply_to_user_id,
                 "tweet_conversation_id": tweet.conversation_id,
                 "tweet_lang": tweet.lang,
+                "tweet_context_annotations": tweet.context_annotations,
 
                 "author_id": user.id,
                 "author_name": user.name,
@@ -307,7 +301,6 @@ def collect_tweets_default(
 
         # get expansions
         users = {u["id"]: u for u in tweets.includes['users']}
-        referenced_tweets = {referenced_tweet.id: referenced_tweet for referenced_tweet in tweets.includes.get("tweets")}
         media = {media["media_key"]: media for media in tweets.includes.get("media")} if tweets.includes.get("media") else None
 
 
@@ -322,20 +315,15 @@ def collect_tweets_default(
             media_keys = attachments.get('media_keys') if attachments else None
             tweet_media = media.get(media_keys[0] if media_keys else media_keys) if media else None
 
-            # get referenced tweet text if its a retweet (otherwise text is truncated)
-            if tweet.referenced_tweets and referenced_tweets.get(tweet.referenced_tweets[0].id):
-                tweet_text = referenced_tweets.get(tweet.referenced_tweets[0].id).text 
-            else:
-                tweet_text = tweet.text
-
             new_row = {
-                "tweet_text": tweet_text,
+                "tweet_text": tweet.text,
                 "tweet_id": tweet.id,
                 "tweet_created_at": tweet.created_at.strftime("%Y-%m-%d %H:%M:%S"),
                 "tweet_public_metrics": tweet.public_metrics,
                 "tweet_in_reply_to_user_id": tweet.in_reply_to_user_id,
                 "tweet_conversation_id": tweet.conversation_id,
                 "tweet_lang": tweet.lang,
+                "tweet_context_annotations": tweet.context_annotations,
 
                 "author_id": user.id,
                 "author_name": user.name,

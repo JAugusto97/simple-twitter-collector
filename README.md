@@ -31,6 +31,7 @@ You can modify the **config.yaml** file to suit your needs. Some fields are opti
   - dump_batch_size (int, optional): dump a batch of this number of tweets. If null, will dump a single file containing every tweet. 
   - start_time (string, optional): string timestamp to collect tweets starting from this period of time. If null, will collect tweets starting from any period of time. Format is "yyyy-mm-ddThh-mm-ssZ"
   - end_time (string, optional): string timestamp to collect tweets up to this period of time. If null, will collect tweets up to any period of time. Format is "yyyy-mm-ddThh-mm-ssZ". end_time must always be a timestamp before than your current timestamp.
+  - recent (bool, optional): if you have elevated access, you can collect tweets both from the full archive of tweets and from recent (up to 7 days) tweets. If you have default access, you can only collect recent tweets.
 - database
   - host (str, optional): postgresql connection host
     database (str, optional): postgresql database name

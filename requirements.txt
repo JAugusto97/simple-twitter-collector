@@ -1,5 +1,9 @@
 pyyaml==5.4.1
 tweepy==4.4.0
 pydrive==1.3.1
+<<<<<<< HEAD
 loguru==0.5.3
 mysql-connector-python==8.0.28
+=======
+loguru
+>>>>>>> f91936d303d5f8e247584b1bf80a27558202d077

@@ -4,6 +4,11 @@ import os
 from loguru import logger
 import json
 import tweepy
+from sys import stderr
+
+loglevel = os.getenv("LOGLEVEL", "INFO").upper()
+logger.remove()
+logger.add(stderr, level=loglevel)
 
 def get_tweet_id(filename, username):
     with open(filename) as fp:

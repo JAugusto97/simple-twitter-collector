@@ -1,14 +1,6 @@
 import tweepy
 from pydrive.drive import GoogleDrive
-from utils.auth_utils import auth_gdrive, load_configs, load_credentials
-from utils.collect_utils import collect_tweets_default, collect_tweets_elevated
-from loguru import logger
-from sys import stderr
-from os import getenv
-
-loglevel = getenv("LOGLEVEL", "INFO").upper()
-logger.remove()
-logger.add(stderr, level=loglevel)
+from utils import auth_gdrive, load_configs, load_credentials, collect_tweets_default, collect_tweets_elevated, logger
 
 if __name__ == "__main__":
     credentials_cfg, storage_cfg, collector_cfg = load_configs("config.yaml")

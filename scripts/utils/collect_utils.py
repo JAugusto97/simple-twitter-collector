@@ -5,6 +5,7 @@ from loguru import logger
 import json
 import tweepy
 from sys import stderr
+from time import sleep
 
 loglevel = os.getenv("LOGLEVEL", "INFO").upper()
 logger.remove()
@@ -79,12 +80,17 @@ def collect_tweets_elevated(
     task_id,
     dump_batch_size,
     gdrive_folder_id,
-    local_folder
+    local_folder,
+    recent=False
 ):
     collected_tweets = []
     total_collected = 0
+    if recent:
+        search_method = client.search_all_tweets
+    else:
+        search_method = client.search_recent_tweets   
     for i, tweets in enumerate(tweepy.Paginator(
-        client.search_all_tweets,
+        search_method,
         start_time=start_time,
         end_time=end_time,
         query=query,
@@ -139,6 +145,7 @@ def collect_tweets_elevated(
         ],
         max_results=100
     )):
+        sleep(1)
         logger.info(f"Retrieved page {i+1} -- Collected {total_collected} tweets so far.")
         if (max_results and len(collected_tweets) >= max_results) or not (tweets.includes.get('users')):
             break

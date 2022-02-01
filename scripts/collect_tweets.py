@@ -14,7 +14,7 @@ if __name__ == "__main__":
     if not cfg.credentials.get("twitter_credentials"):
         raise Exception("Missing Twitter credentials configuration attribute")
 
-    if cfg.storage_cfg.get("dump_to_google_drive"):
+    if cfg.storage.get("dump_to_google_drive"):
         google_credentials = cfg.credentials.get("google_drive_credentials")
         if google_credentials and cfg.storage.get("gdrive_folder_id"):
             gauth = auth_gdrive(google_credentials)

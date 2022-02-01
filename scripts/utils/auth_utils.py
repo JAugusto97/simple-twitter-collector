@@ -10,6 +10,7 @@ class Config:
             self.credentials = self.complete.get("credentials")
             self.storage = self.complete.get("storage")
             self.collector = self.complete.get("collector")
+            self.database = self.complete.get("database")
 
             logger.debug(
                 f"""

@@ -31,12 +31,13 @@ class DataBase:
         places=True
     ):   
         if tweets:
+            self.tables.append("tweets")
             self.execute(
             """CREATE TABLE IF NOT EXISTS tweets
             (
                 tweet_id VARCHAR(80) NOT NULL,
                 user_id VARCHAR(80),
-                news_id VARCHAR(80) NOT NULL,
+                task_id VARCHAR(80) NOT NULL,
                 text VARCHAR(1000),
                 created_at TIMESTAMP,
                 place_id VARCHAR(80),
@@ -49,10 +50,11 @@ class DataBase:
                 in_reply_to_user_id VARCHAR(80),
                 media_key VARCHAR(360),
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                PRIMARY KEY(tweet_id, news_id)
+                PRIMARY KEY(tweet_id, task_id)
             )"""
             )
         if users:
+            self.tables.append("users")
             self.execute(
             """CREATE TABLE IF NOT EXISTS users
             (
@@ -72,6 +74,7 @@ class DataBase:
             )"""
             )
         if media:
+            self.tables.append("media")
             self.execute(
             """
             CREATE TABLE IF NOT EXISTS media
@@ -90,6 +93,7 @@ class DataBase:
             """
             )
         if places:
+            self.tables.append("places")
             self.execute(
             """
             CREATE TABLE IF NOT EXISTS places
@@ -105,8 +109,19 @@ class DataBase:
             """
             )
     
-    def insert_batch():
-        pass
+    def insert_batch(self, table_name, data, pkeys):
+        cols = ", ".join(data[0].keys())
+        values = "".join([f"%({key})s," for key in data[0].keys()])[:-1]
+        pkeys = ", ".join(pkeys)
+        sql = \
+            f"""
+            INSERT INTO {table_name} ({cols})
+            VALUES ({values}) ON CONFLICT ({pkeys}) DO UPDATE SET updated_at = CURRENT_TIMESTAMP
+            """
+
+        cur = self.conn.cursor()
+        cur.executemany(sql, data)
+        self.conn.commit()
 
     def insert():
         pass

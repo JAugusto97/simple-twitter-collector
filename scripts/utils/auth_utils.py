@@ -1,48 +1,38 @@
 import json
 from yaml import safe_load
 from pydrive.auth import GoogleAuth
-from loguru import logger
+from . import logger
 
-def load_configs(config_path):
-    with open(config_path) as f:
-        configs = safe_load(f)
-        
-    credentials_cfg = configs.get("credentials")
-    storage_cfg = configs.get("storage")
-    collector_cfg = configs.get("collector")
+class Config:
+    def __init__(self, config_path="config.yaml"):
+        with open(config_path) as f:
+            self.complete = safe_load(f)
+            self.credentials = self.complete.get("credentials")
+            self.storage = self.complete.get("storage")
+            self.collector = self.complete.get("collector")
 
-    logger.debug(
-        f"""
-        -----Configs-----
-        Credentials:
-            Twitter Credentials: {credentials_cfg.get('twitter_credentials')} 
-            Google Drive Credentials: {credentials_cfg.get('google_drive_credentials')}
-            Has Twitter Elevated Access: {credentials_cfg.get('is_twitter_elevated_access')}
+            logger.debug(
+                f"""
+                -----Configs-----
+                Credentials:
+                    Twitter Credentials: {self.credentials.get('twitter_credentials')} 
+                    Google Drive Credentials: {self.credentials.get('google_drive_credentials')}
+                    Has Twitter Elevated Access: {self.credentials.get('is_twitter_elevated_access')}
 
-        Storage:
-            Dump To Google Drive: {storage_cfg.get('dump_to_google_drive')} 
-            Main Google Drive Folder ID: {storage_cfg.get('gdrive_folder_id')}
-            Local Folder: {storage_cfg.get('local_folder')} 
+                Storage:
+                    Dump To Google Drive: {self.storage.get('dump_to_google_drive')} 
+                    Main Google Drive Folder ID: {self.storage.get('gdrive_folder_id')}
+                    Local Folder: {self.storage.get('local_folder')} 
 
-        Collector:
-            Task ID: {collector_cfg.get('task_id')} 
-            Query from DB: {collector_cfg.get('query_from_db')}
-            Query: {collector_cfg.get('query')}
-            Max Results: {collector_cfg.get('max_results')}
-            Dump Batch Size: {collector_cfg.get('dump_batch_size')}
-            Start Time: {collector_cfg.get('start_time')} 
-            End Time: {collector_cfg.get('end_time')}
-        """ + 18*"-")
-
-    print(
-        f"""
-        Collecting Tweets...
-        Task ID: {collector_cfg.get('task_id')}
-        Query: {collector_cfg.get('query')}
-        """
-    )
-    return credentials_cfg, storage_cfg, collector_cfg
-
+                Collector:
+                    Task ID: {self.collector.get('task_id')} 
+                    Query: {self.collector.get('query')}
+                    Max Results: {self.collector.get('max_results')}
+                    Dump Batch Size: {self.collector.get('dump_batch_size')}
+                    Start Time: {self.collector.get('start_time')} 
+                    End Time: {self.collector.get('end_time')}
+                """ + 18*"-"
+            )
 
 def load_credentials(filename):
     with open(filename) as fp:

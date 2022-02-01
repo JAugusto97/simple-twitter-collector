@@ -40,7 +40,7 @@ if __name__ == "__main__":
             gdrive_folder_id=cfg.storage.get("gdrive_folder_id"),
             local_folder=cfg.storage.get("local_folder"),
             gdrive=gdrive,
-            recent=True
+            recent=cfg.collector.get("recent")
         )
     else:
         collect_tweets_default(

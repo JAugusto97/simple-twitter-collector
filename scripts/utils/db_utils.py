@@ -109,4 +109,4 @@ class DataBase:
         pass
 
     def insert():
-        pass:
+        pass

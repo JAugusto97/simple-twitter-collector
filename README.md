@@ -5,7 +5,7 @@ A simple tweet collector wrapper built on top of tweepy and optionally integrate
 1. Install the dependencies:  
 ```pip3 install -r requirements.txt```
 2. Follow these [instructions](https://developer.twitter.com/en/docs/twitter-api/getting-started/getting-access-to-the-twitter-api) to get your Twitter API keys. Paste your Twitter API keys inside **credentials/twitter_credentials.json** 
-3. (Optional) Follow these [instructions](https://developers.google.com/drive/api/v3/about-auth#OAuth2Authorizing) to get your Google Drive API keys. Download the **client_secrets.json** file and place it into **credentials/client_secrets.json**
+3. (Optional) Follow these [instructions](https://developers.google.com/drive/api/v3/about-auth#OAuth2Authorizing) to get your Google Drive OAuth 2.0 secret keys. Download the **client_secrets.json** file and place it into **credentials/client_secrets.json**
 4. (Optional) Install and configure a PostgreSQL database for your specific OS.
 5. Modify the **config.yaml** file with your desired configurations.
 6. To collect the tweets:  

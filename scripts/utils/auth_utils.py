@@ -1,7 +1,7 @@
 import json
 from yaml import safe_load
 from pydrive.auth import GoogleAuth
-from . import logger
+from .collect_utils import logger
 
 class Config:
     def __init__(self, config_path="config.yaml"):

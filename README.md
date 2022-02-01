@@ -38,10 +38,10 @@ You can modify the **config.yaml** file to suit your needs. Some fields are opti
     user (str, optional): postgresql user. 
     password (str, optional): postgresql password. 
     tables:  
-        tweets (bool, optional): true. 
-        users (bool, optional): true. 
-        media (bool, optional): true. 
-        places (bool, optional): false. 
+        tweets (bool, optional): true   
+        users (bool, optional): true  
+        media (bool, optional): true  
+        places (bool, optional): false  
   
 ## 🔍 Tweet Fields Retrieved
 These are the data fields that will be collected. You can find more details [here](https://developer.twitter.com/en/docs/twitter-api/fields).

@@ -10,7 +10,7 @@ A simple tweet collector wrapper built on top of tweepy and optionally integrate
 5. Modify the **config.yaml** file with your desired configurations.
 6. To collect the tweets:  
    ```make collect```
-7. (Optional) To parse the raw tweets into a PostgreSQL database:
+7. (Optional) To parse the raw tweets into a PostgreSQL database:  
   ```make parse```
 
 ## 🔧 Configuration File

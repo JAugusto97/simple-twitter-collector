@@ -31,7 +31,7 @@ def download_data(drive, task_id, root_folder, local_folder):
 
     return fname_list
 
-def parse_datafile(drive, db, task_id, root_folder, local_folder):
+def parse_datafile(drive, db, task_id, root_folder, local_folder, tables):
     tweets = []
     users = []
     media = []
@@ -104,13 +104,13 @@ def parse_datafile(drive, db, task_id, root_folder, local_folder):
                 if place_row["place_id"]:
                     places.append(place_row)
 
-    if tweets:
+    if tweets and tables.get("tweets"):
         db.insert_batch(table_name="tweets", data=tweets, pkeys=["tweet_id", "task_id"])
-    if users:
+    if users and tables.get("users"):
         db.insert_batch(table_name="users", data=users, pkeys=["user_id"])
-    if media:
+    if media and tables.get("media"):
         db.insert_batch(table_name="media", data=media, pkeys=["media_key"])
-    if places:
+    if places and tables.get("places"):
         db.insert_batch(table_name="places", data=places, pkeys=["place_id"])
 
 if __name__ == "__main__":
@@ -136,5 +136,6 @@ if __name__ == "__main__":
         db,
         cfg.collector.get("task_id"),
         cfg.storage.get("gdrive_folder_id"),
-        cfg.storage.get("local_folder")
+        cfg.storage.get("local_folder"),
+        cfg.database.get("tables")
     )

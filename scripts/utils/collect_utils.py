@@ -5,6 +5,7 @@ from loguru import logger
 import json
 import tweepy
 from sys import stderr
+from time import sleep
 
 loglevel = os.getenv("LOGLEVEL", "INFO").upper()
 logger.remove()
@@ -139,6 +140,7 @@ def collect_tweets_elevated(
         ],
         max_results=100
     )):
+        sleep(1)
         logger.info(f"Retrieved page {i+1} -- Collected {total_collected} tweets so far.")
         if (max_results and len(collected_tweets) >= max_results) or not (tweets.includes.get('users')):
             break

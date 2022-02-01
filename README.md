@@ -9,9 +9,9 @@ A simple tweet collector wrapper built on top of tweepy and optionally integrate
 4. (Optional) Install and configure a PostgreSQL database for your specific OS.
 5. Modify the **config.yaml** file with your desired configurations.
 6. To collect the tweets:  
-   ```python3 scripts/collect_tweets.py```
+   ```make collect```
 7. (Optional) To parse the raw tweets into a PostgreSQL database:
-  ```python3 scripts/parse_tweets.py```
+  ```make parse```
 
 ## 🔧 Configuration File
 You can modify the **config.yaml** file to suit your needs. Some fields are optional if you want to upload your files to Google Drive and insert them into PostgreSQL. Below you will find the description of the fields you can modify. Required fields are in bold.

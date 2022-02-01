@@ -1,6 +1,6 @@
 .venv
 *.DS_Store
-credentials
+credentials/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

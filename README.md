@@ -34,14 +34,14 @@ You can modify the **config.yaml** file to suit your needs. Some fields are opti
   - recent (bool, optional): if you have elevated access, you can collect tweets both from the full archive of tweets and from recent (up to 7 days) tweets. If you have default access, you can only collect recent tweets.
 - database  
   - host (str, optional): postgresql connection host  
-    database (str, optional): postgresql database name  
-    user (str, optional): postgresql user  
-    password (str, optional): postgresql password  
-    tables:  
-        tweets (bool, optional): true   
-        users (bool, optional): true  
-        media (bool, optional): true  
-        places (bool, optional): false  
+  - database (str, optional): postgresql database name  
+  - user (str, optional): postgresql user  
+  - password (str, optional): postgresql password  
+  - tables:  
+        - tweets (bool, optional): true   
+        - users (bool, optional): true  
+        - media (bool, optional): true  
+        - places (bool, optional): false  
   
 ## 🔍 Tweet Fields Retrieved
 These are the data fields that will be collected. You can find more details [here](https://developer.twitter.com/en/docs/twitter-api/fields).

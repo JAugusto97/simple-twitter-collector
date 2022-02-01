@@ -80,12 +80,17 @@ def collect_tweets_elevated(
     task_id,
     dump_batch_size,
     gdrive_folder_id,
-    local_folder
+    local_folder,
+    recent=False
 ):
     collected_tweets = []
     total_collected = 0
+    if recent:
+        search_method = client.search_all_tweets
+    else:
+        search_method = client.search_recent_tweets   
     for i, tweets in enumerate(tweepy.Paginator(
-        client.search_all_tweets,
+        search_method,
         start_time=start_time,
         end_time=end_time,
         query=query,

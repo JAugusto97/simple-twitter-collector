@@ -39,7 +39,8 @@ if __name__ == "__main__":
             dump_batch_size=cfg.collector.get("dump_batch_size"),
             gdrive_folder_id=cfg.storage.get("gdrive_folder_id"),
             local_folder=cfg.storage.get("local_folder"),
-            gdrive=gdrive
+            gdrive=gdrive,
+            recent=True
         )
     else:
         collect_tweets_default(

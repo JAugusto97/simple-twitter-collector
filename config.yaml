@@ -14,6 +14,7 @@ collector:
     dump_batch_size: 1000
     start_time: null
     end_time: null
+    recent: true
 database:
     host: "localhost"
     database: "twitter"

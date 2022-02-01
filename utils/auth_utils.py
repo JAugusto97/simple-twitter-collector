@@ -26,6 +26,7 @@ def load_configs(config_path):
 
         Collector:
             Task ID: {collector_cfg.get('task_id')} 
+            Query from DB: {collector_cfg.get('query_from_db')}
             Query: {collector_cfg.get('query')}
             Max Results: {collector_cfg.get('max_results')}
             Dump Batch Size: {collector_cfg.get('dump_batch_size')}

@@ -23,6 +23,10 @@ class DataBase:
             cur = self.conn.cursor()
             cur.execute(command)
 
+    def create_db(self, name):
+       self.conn.autocommit = True
+       self.execute(f"""CREATE DATABASE {name}""")
+
     def create_tables(
         self,
         tweets=True,
